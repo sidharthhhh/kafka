@@ -12,6 +12,10 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Set build-time environment variable
+ARG VITE_SOCKET_URL=http://localhost:5001
+ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
+
 # Build the app
 RUN npm run build
 

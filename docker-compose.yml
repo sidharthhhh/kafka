@@ -67,6 +67,7 @@ services:
     container_name: backend-api
     ports:
       - "5000:5000"
+      - "5001:5001"
     environment:
       PORT: 5000
       NODE_ENV: production

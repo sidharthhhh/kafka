@@ -10,6 +10,7 @@ class MetricsEngine {
             deviceStats: {},
             uniqueVisitorsToday: 0,
             recentEvents: [],
+            pageViewsHistory: [],
         };
     }
 
@@ -33,6 +34,7 @@ class MetricsEngine {
             const now = Date.now();
             const oneMinuteAgo = now - 60 * 1000;
             const oneDayAgo = now - 24 * 60 * 60 * 1000;
+            const thirtyMinutesAgo = now - 30 * 60 * 1000;
 
             // Page views in last minute
             this.metrics.pageViewsLastMinute = await Event.countDocuments({
@@ -79,6 +81,53 @@ class MetricsEngine {
                 page: p._id,
                 views: p.count,
             }));
+
+            // Page Views History (Last 30 minutes)
+            const history = await Event.aggregate([
+                {
+                    $match: {
+                        event: 'page_view',
+                        timestamp: { $gte: thirtyMinutesAgo },
+                    },
+                },
+                {
+                    $project: {
+                        // Round down to nearest minute
+                        minute: {
+                            $subtract: [
+                                '$timestamp',
+                                { $mod: ['$timestamp', 60 * 1000] }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$minute',
+                        count: { $sum: 1 },
+                    },
+                },
+                {
+                    $sort: { _id: 1 },
+                },
+            ]);
+
+            // Fill in gaps with 0
+            const filledHistory = [];
+            for (let i = 29; i >= 0; i--) {
+                const time = now - i * 60 * 1000;
+                const minuteTimestamp = time - (time % (60 * 1000));
+
+                const found = history.find(h => h._id === minuteTimestamp);
+                const date = new Date(minuteTimestamp);
+                const timeLabel = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+                filledHistory.push({
+                    time: timeLabel,
+                    views: found ? found.count : 0
+                });
+            }
+            this.metrics.pageViewsHistory = filledHistory;
 
             // Device stats (parsed from userAgent)
             const deviceStats = await Event.aggregate([

@@ -42,7 +42,7 @@ const startServer = async () => {
         // Connect Kafka Producer
         await kafkaProducer.connect();
 
-        // Initialize WebSocket
+        // Initialize WebSocket on separate port
         const httpServer = initWebSocket(app);
 
         // Start Kafka Consumer in the same process
@@ -51,10 +51,15 @@ const startServer = async () => {
         await kafkaConsumer.start();
         logger.info('Kafka Consumer started');
 
-        // Start server
-        httpServer.listen(config.port, () => {
+        // Start API server on port 5000
+        app.listen(config.port, () => {
             logger.info(`Server running on port ${config.port}`);
-            logger.info(`WebSocket server ready`);
+        });
+
+        // Start WebSocket server on port 5001
+        const websocketPort = config.websocket.port || 5001;
+        httpServer.listen(websocketPort, () => {
+            logger.info(`WebSocket server ready on port ${websocketPort}`);
         });
     } catch (error) {
         logger.error(`Failed to start server: ${error.message}`);

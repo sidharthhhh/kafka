@@ -1,15 +1,12 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const PageViewsChart = ({ data = [] }) => {
-    // Generate mock time-series data for demo
-    const chartData = Array.from({ length: 10 }, (_, i) => ({
-        time: `${i}m`,
-        views: Math.floor(Math.random() * 100) + 20,
-    }));
+    // Use data passed from props, fallback to empty array if undefined
+    const chartData = data;
 
     return (
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-            <h3 className="text-white text-xl font-bold mb-4">📈 Page Views (Last 10 Minutes)</h3>
+            <h3 className="text-white text-xl font-bold mb-4">📈 Page Views (Last 30 Minutes)</h3>
             <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
